@@ -24,10 +24,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <title>Tic-Tac-Toe Game</title>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <footer>
+          <p>Made by <a href="https://x.com/_khushaalsharma">@_khushaalsharma</a></p>
+          <p><a href="https://github.com/khushaalsharma/Tic-Tac-Toe">GitHub Repository</a></p>
+        </footer>
       </body>
     </html>
   );

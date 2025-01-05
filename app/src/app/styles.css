@@ -1,6 +1,9 @@
 body {
     margin: 0;
     font-family: "Arial", sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    /* Dark gradient for better text contrast */
+    color: #fff;
 }
 
 .home-container,
@@ -10,14 +13,15 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #ff7eb3, #ff758c, #ff7eb3);
     color: #fff;
+    /* Ensure all text is white for better visibility */
 }
 
 .title {
     font-size: 2.5rem;
     font-weight: bold;
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
 }
 
 .slider-container {
@@ -43,12 +47,15 @@ body {
 .slide-btn.active {
     background: #333;
     color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .form-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    width: 300px;
+    /* Limit width for better layout */
 }
 
 .input-field {
@@ -56,6 +63,21 @@ body {
     font-size: 1rem;
     border: none;
     border-radius: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    /* Transparent background for modern feel */
+    color: #fff;
+    /* Ensure text is white for visibility */
+}
+
+.input-field::placeholder {
+    color: #ddd;
+    /* Placeholder text color */
+}
+
+.input-field:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.3);
+    /* Slightly brighter on focus */
 }
 
 .action-btn {
@@ -86,18 +108,33 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
-    background: rgba(255, 255, 255, 0.8);
-    color: #333;
+    background: rgba(255, 255, 255, 0.1);
+    /* Subtle grid background */
+    color: #fff;
+    /* Ensure "O" and "X" are visible */
     cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    /* Light border for clarity */
     transition: all 0.3s ease;
 }
 
 .cell.occupied {
-    background: #ff758c;
-    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    /* Brighter when occupied */
     cursor: not-allowed;
+}
+
+.cell:hover {
+    background: rgba(255, 255, 255, 0.3);
+    /* Highlight on hover */
+}
+
+.status {
+    font-size: 1.5rem;
+    margin-top: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .overlay {
@@ -120,6 +157,10 @@ body {
     text-align: center;
 }
 
+.popup h2 {
+    margin-bottom: 15px;
+}
+
 .exit-btn {
     padding: 10px 20px;
     background: #ef4444;
@@ -132,4 +173,66 @@ body {
 
 .exit-btn:hover {
     background: #dc2626;
+}
+
+/* Room Code Styling */
+.room-code {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.room-id-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.room-id-text {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.copy-btn {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.copy-btn:hover {
+    background-color: #0056b3;
+}
+
+.copy-success {
+    color: green;
+    font-size: 14px;
+    margin-left: 10px;
+    animation: fade-out 2s forwards;
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+footer{
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #333;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
 }

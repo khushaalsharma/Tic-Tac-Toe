@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 
-const rooms = {};
+const rooms = {}; // Store rooms with their states
 
 const initializeSocketServer = (server) => {
   const io = new Server(server, {
@@ -15,11 +15,18 @@ const initializeSocketServer = (server) => {
 
     // Create a new room
     socket.on("createRoom", ({ username }) => {
-      const roomId = Math.random().toString(36).substring(2, 8);
+      let roomId;
+      do {
+        roomId = Math.random().toString(36).substring(2, 8); // Generate a random 6-character ID
+      } while (rooms[roomId]); // Ensure roomId is unique
+
       rooms[roomId] = {
         players: [{ id: socket.id, username }],
         gameState: { grid: Array(9).fill(null), currentTurn: 0 },
       };
+
+      console.log(`Room created: ${roomId}, Host: ${username}`);
+
       socket.join(roomId);
       socket.emit("roomCreated", { roomId });
     });
@@ -27,91 +34,106 @@ const initializeSocketServer = (server) => {
     // Join an existing room
     socket.on("joinRoom", ({ roomId, username }) => {
       const room = rooms[roomId];
-      if (room && room.players.length < 2) {
-        room.players.push({ id: socket.id, username });
-        socket.join(roomId);
-        io.to(roomId).emit("roomJoined", { players: room.players });
-      } else {
-        socket.emit("roomFull");
+      if (!room) {
+        console.log(`Join attempt failed: Room ${roomId} does not exist.`);
+        return socket.emit("roomNotFound");
       }
+
+      if (room.players.length >= 2) {
+        console.log(`Join attempt failed: Room ${roomId} is full.`);
+        return socket.emit("roomFull");
+      }
+
+      room.players.push({ id: socket.id, username });
+      socket.join(roomId);
+      console.log(`${username} joined Room ${roomId}`);
+      io.to(roomId).emit("roomJoined", { players: room.players });
     });
 
-    // Handle moves and check game logic
+    // Handle moves and game logic
     socket.on("makeMove", ({ roomId, cellIndex }) => {
-      console.log(`Move received: Room - ${roomId}, Cell - ${cellIndex}`);
-      const room = rooms[roomId];
-      if (!room) return;
-
-      const { gameState } = room;
-      if (!gameState.grid[cellIndex] && room.players[gameState.currentTurn].id === socket.id) {
-        gameState.grid[cellIndex] = gameState.currentTurn === 0 ? "X" : "O";
-        console.log(`Grid updated: ${gameState.grid}`);
-        
-        const winner = checkWinner(gameState.grid);
-        if (winner) {
-          io.to(roomId).emit("gameOver", { winner: room.players[gameState.currentTurn === 0 ? 1 : 0].username });
-          delete rooms[roomId];
-          return;
-        }
-
-        if (gameState.grid.every((cell) => cell)) {
-          io.to(roomId).emit("gameOver", { winner: "Draw" });
-          delete rooms[roomId];
-          return;
-        }
-
-        gameState.currentTurn = 1 - gameState.currentTurn;
-        io.to(roomId).emit("updateGame", gameState);
-      } else {
-        console.log("Invalid move or not the player's turn.");
-      }
-    });
-
-    socket.on("resetGame", ({ roomId }) => {
-      console.log(`Reset game request received for room: ${roomId}`);
       const room = rooms[roomId];
       if (!room) {
-        console.log("Room not found");
+        console.log(`Invalid move: Room ${roomId} does not exist.`);
         return;
       }
 
-      // Reset game state
+      const { gameState, players } = room;
+
+      // Validate the move
+      if (
+        gameState.grid[cellIndex] || // Cell is already occupied
+        players[gameState.currentTurn].id !== socket.id // Not the player's turn
+      ) {
+        console.log(`Invalid move: Room ${roomId}, Cell ${cellIndex}`);
+        return;
+      }
+
+      // Update the grid with the player's symbol
+      gameState.grid[cellIndex] = gameState.currentTurn === 0 ? "X" : "O";
+      console.log(`Room ${roomId} Grid:`, gameState.grid);
+
+      // Check for a winner
+      const winner = checkWinner(gameState.grid);
+      if (winner) {
+          const winningPlayer = players[gameState.currentTurn].username;
+          console.log(`Room ${roomId}: Winner is ${winningPlayer}`);
+          io.to(roomId).emit("gameOver", { winner: winningPlayer }); // Now correctly sending the current player's username
+          delete rooms[roomId]; // Clean up the room
+          return;
+      }
+
+      // Check for a draw
+      if (gameState.grid.every((cell) => cell)) {
+        console.log(`Room ${roomId}: Game ended in a draw.`);
+        io.to(roomId).emit("gameOver", { winner: "Draw" });
+        delete rooms[roomId]; // Clean up the room
+        return;
+      }
+
+      // Switch turns
+      gameState.currentTurn = 1 - gameState.currentTurn;
+      io.to(roomId).emit("updateGame", gameState);
+    });
+
+    // Reset the game state
+    socket.on("resetGame", ({ roomId }) => {
+      const room = rooms[roomId];
+      if (!room) {
+        console.log(`Reset attempt failed: Room ${roomId} does not exist.`);
+        return;
+      }
+
+      // Reset the grid and turn
       room.gameState = {
         grid: Array(9).fill(null),
         currentTurn: 0,
       };
 
-      console.log("Game state reset for room:", roomId);
-
-      // Notify clients of the reset
+      console.log(`Room ${roomId}: Game reset.`);
       io.to(roomId).emit("updateGame", room.gameState);
     });
 
-    socket.on("updateGame", (gameState) => {
-      console.log("Game state updated:", gameState);
-      setGrid(gameState.grid);
-      setCurrentTurn(gameState.currentTurn);
-      setWinner(null); // Clear the winner state
-    });
-
-
     // Handle client disconnection
     socket.on("disconnect", () => {
-      console.log("Client disconnected:", socket.id);
+      console.log(`Client disconnected: ${socket.id}`);
 
       // Remove the player from the room
       for (const roomId in rooms) {
         const room = rooms[roomId];
         const playerIndex = room.players.findIndex((player) => player.id === socket.id);
+
         if (playerIndex !== -1) {
+          const playerName = room.players[playerIndex].username;
           room.players.splice(playerIndex, 1);
+          console.log(`Player ${playerName} removed from Room ${roomId}`);
 
           // If the room is empty, delete it
           if (room.players.length === 0) {
             delete rooms[roomId];
-            console.log(`Room ${roomId} deleted`);
+            console.log(`Room ${roomId} deleted.`);
           } else {
-            // Notify the other player that the opponent has left
+            // Notify the remaining player
             io.to(roomId).emit("opponentLeft");
           }
           break;
@@ -119,8 +141,9 @@ const initializeSocketServer = (server) => {
       }
     });
 
+    // Exit room logic
     socket.on("exitRoom", ({ roomId }) => {
-      console.log(`User ${socket.id} exited room ${roomId}`);
+      console.log(`User ${socket.id} exited Room ${roomId}`);
       socket.leave(roomId);
 
       const room = rooms[roomId];
@@ -129,21 +152,18 @@ const initializeSocketServer = (server) => {
         if (playerIndex !== -1) {
           room.players.splice(playerIndex, 1);
 
-          // If the room is empty, delete it
           if (room.players.length === 0) {
             delete rooms[roomId];
-            console.log(`Room ${roomId} deleted`);
+            console.log(`Room ${roomId} deleted.`);
           } else {
-            // Notify the other player that the opponent has left
             io.to(roomId).emit("opponentLeft");
           }
         }
       }
     });
-
   });
 
-  // Function to check if someone has won
+  // Function to check the winner
   const checkWinner = (grid) => {
     const winningCombos = [
       [0, 1, 2],
@@ -162,7 +182,7 @@ const initializeSocketServer = (server) => {
         return grid[a]; // Return "X" or "O"
       }
     }
-    return null; // No winner yet
+    return null; // No winner
   };
 };
 

@@ -1,22 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import socket from "../../utils/socket";
 import "../../styles.css";
 
 const GamePage = () => {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const roomId = searchParams.get("roomId");
+  const {roomId} = useParams();
   //const username = searchParams.get("username");
   const [grid, setGrid] = useState(Array(9).fill(null));
   const [currentTurn, setCurrentTurn] = useState(0);
   const [winner, setWinner] = useState<string | null>(null);
   const [opponentLeft, setOpponentLeft] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     // Listen for game updates
+
     socket.on("updateGame", (gameState) => {
       setGrid(gameState.grid);
       setCurrentTurn(gameState.currentTurn);
@@ -42,16 +43,38 @@ const GamePage = () => {
     router.push("/");
   };
 
+  const handleCopyRoomId = () => {
+    if (typeof roomId === "string") {
+      navigator.clipboard.writeText(roomId).then(
+      () => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000); // Reset after 2 seconds
+      },
+      );
+    } else {
+      alert("Failed to copy room ID");
+    }
+  };
+
   return (
     <div className="game-container">
-      <h1 className="title">Room Code: {roomId}</h1>
+      {/* Room ID Display */}
+      <div className="room-id-container">
+        <span className="room-id-text">Room ID: {roomId}</span>
+        <button className="copy-btn" onClick={handleCopyRoomId}>
+          Copy
+        </button>
+        {copySuccess && <span className="copy-success">Copied!</span>}
+      </div>
       <div className="grid-container">
         {grid.map((cell, index) => (
           <div
             key={index}
             onClick={() => {
               if (!grid[index] && !winner && !opponentLeft) {
+                console.log("Cell clicked");
                 socket.emit("makeMove", { roomId, cellIndex: index });
+                console.log("event emitted");
               }
             }}
             className={`cell ${cell ? "occupied" : ""}`}
