@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
           <p>Made by <a href="https://x.com/_khushaalsharma">@_khushaalsharma</a></p>
           <p><a href="https://github.com/khushaalsharma/Tic-Tac-Toe">GitHub Repository</a></p>
         </footer>
+        <Analytics/>
       </body>
     </html>
   );
