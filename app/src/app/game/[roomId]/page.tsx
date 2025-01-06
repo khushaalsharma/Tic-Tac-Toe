@@ -72,9 +72,7 @@ const GamePage = () => {
             key={index}
             onClick={() => {
               if (!grid[index] && !winner && !opponentLeft) {
-                console.log("Cell clicked");
                 socket.emit("makeMove", { roomId, cellIndex: index });
-                console.log("event emitted");
               }
             }}
             suppressHydrationWarning={true}
