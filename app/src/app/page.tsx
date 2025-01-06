@@ -68,12 +68,14 @@ const Home = () => {
           <button
             className={`slide-btn ${slide === "create" ? "active" : ""}`}
             onClick={() => setSlide("create")}
+            suppressHydrationWarning={true}
           >
             Create Room
           </button>
           <button
             className={`slide-btn ${slide === "join" ? "active" : ""}`}
             onClick={() => setSlide("join")}
+            suppressHydrationWarning={true}
           >
             Join Room
           </button>
@@ -89,6 +91,7 @@ const Home = () => {
           value={username}
           onChange={handleInputChange(setUsername)}
           className="input-field"
+          suppressHydrationWarning={true}
         />
 
         {/* Room ID Input (only visible in 'Join' mode) */}
@@ -99,6 +102,7 @@ const Home = () => {
             value={roomId}
             onChange={handleInputChange(setRoomId)}
             className="input-field"
+            suppressHydrationWarning={true}
           />
         )}
 
@@ -106,6 +110,7 @@ const Home = () => {
         <button
           className="action-btn"
           onClick={slide === "create" ? handleCreateRoom : handleJoinRoom}
+          suppressHydrationWarning={true}
         >
           {slide === "create" ? "Create Room" : "Join Room"}
         </button>

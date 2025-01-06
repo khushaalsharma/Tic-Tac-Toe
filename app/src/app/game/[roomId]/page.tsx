@@ -61,7 +61,7 @@ const GamePage = () => {
       {/* Room ID Display */}
       <div className="room-id-container">
         <span className="room-id-text">Room ID: {roomId}</span>
-        <button className="copy-btn" onClick={handleCopyRoomId}>
+        <button className="copy-btn" onClick={handleCopyRoomId} suppressHydrationWarning={true}>
           Copy
         </button>
         {copySuccess && <span className="copy-success">Copied!</span>}
@@ -77,6 +77,7 @@ const GamePage = () => {
                 console.log("event emitted");
               }
             }}
+            suppressHydrationWarning={true}
             className={`cell ${cell ? "occupied" : ""}`}
           >
             {cell}
@@ -96,7 +97,7 @@ const GamePage = () => {
         <div className="overlay">
           <div className="popup">
             <h2>{winner ? `${winner} Wins!` : "Opponent Left the Game!"}</h2>
-            <button className="exit-btn" onClick={handleExit}>
+            <button className="exit-btn" onClick={handleExit} suppressHydrationWarning={true}>
               Exit
             </button>
           </div>
